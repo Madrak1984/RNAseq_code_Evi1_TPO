@@ -40,171 +40,6 @@ library(ggsurvfit)
 source("Src/DE_functions.R")
 
 
-##### function to perform the high vs low mecom comparison
-#  all_samples_selected, character vector, contains the identifiers of samples to analyze
-#  table_TARGET_unstr, dataframe object, contains gene expression per sample
-#  DEA_dir, character value, contains the output path where to save the result
-#  mecom_TARGET_log2tpm, numeric vector, contains level of expression of mecom after tpm or rpkm normalization
-#  Human_genes, dataframe obejct, contains information provide by the function getHumanGene (by default)
-#  cutoffs, numeric vector, indicates the different values of cutoff to use (by default 2, 3 and 4)
-#### perform DEA and save result in directory which indicates the cutoff used for the analysis
-perform_DEA_HighVsLow <- function(all_samples_selected, table_TARGET_unstr, DEA_dir, mecom_TARGET_log2tpm, Human_genes = getHumanGene(), cutoffs = 2:4){
-  
-
-  
-  # loop for the differential expression analysis
-  for(cutoff in cutoffs){
-    
-    print(paste0(date(), "; start DEA with cutoff of ", cutoff))
-    
-    #initialize the result_list object
-    list_result <- NULL
-    
-    # create output directory
-    tmp_DEA <- create_dir(path = file.path(DEA_dir, paste0("TARGET_cutoff_",cutoff)))
-    
-    # select the samples
-    table_TARGET_unstr <- table_TARGET_unstr[, colnames(table_TARGET_unstr) %in% all_samples_selected]
-    
-    # replace NA value in table
-    table_TARGET_unstr[is.na(table_TARGET_unstr)] = 0
-    
-    # determine the group
-    group <- rep("low", ncol(table_TARGET_unstr))
-    
-    # update the group
-    id_high = mecom_TARGET_log2tpm[colnames(table_TARGET_unstr)[colnames(table_TARGET_unstr) %in% all_samples_selected]] > cutoff
-    group[id_high] = "high"
-    
-    # remove the gene lowly expressed
-    print(paste0("# genes:", nrow(table_TARGET_unstr)))
-    # keep gene with more than 10 reads in total
-    count_10 <- nrow(table_TARGET_unstr[rowSums(table_TARGET_unstr) > 10,])
-    print(paste0("# kept genes (filter based on 10): ", count_10))
-    # 21865 kept genes among 21865 genes
-    
-    # create the dge
-    dge <- DGEList(counts = table_TARGET_unstr, group = group)
-    
-    # filter according to the filtering gene expression
-    keep <- filterByExpr(dge)
-    count_filter <- length(keep[keep])
-    print(paste0("# kept gene after filtering by function:", count_filter))
-    # 21865 genes kept
-    
-    # filter the genes
-    if(count_10 < count_filter){
-      print("Gene filtering based on the number of reads (sum > 10)")
-      dge <- dge[rowSums(table_TARGET_unstr) > 10,,keep.lib.sizes=FALSE]  
-    } else {
-      print("Gene filtering based on the filterByExpr function!")
-      dge <- dge[keep,,keep.lib.sizes=FALSE]
-    }
-    
-    
-    # calculate the normalization factor values
-    dge <- calcNormFactors(dge)
-    
-    # create the design object
-    design <- model.matrix(~ 0 + group)
-    
-    # change the colnames
-    colnames(design) <- c("high", "low")
-    
-    # estimate the dispersion
-    dge <-  estimateDisp(dge, design = design)
-    
-    # save the BCV plot
-    saveFigures("BCVplot", ggplot = plotBCV(dge), dirPlot = tmp_DEA, A4 = T)
-    
-    # perform the exact test
-    et <-  exactTest(dge)
-    
-    # provide all results
-    allresult <- as.data.frame(topTags(et, n=nrow(et)))
-    
-    # add ensembl gene id
-    allresult <-  cbind(allresult, "Ensembl_id" = sapply(rownames(allresult),
-                                                         function(x) strsplit(x, split = "\\.")[[1]][1]))
-    
-    # merge with the human gene information
-    allresult <- merge(x = allresult, 
-                       y = Human_genes, 
-                       by.x = "Ensembl_id", 
-                       by.y = "ensembl_gene_id")
-    
-    # correct the orientation of the FC
-    if(allresult$logFC[grepl(pattern = "^MECOM$", allresult$external_gene_name)] < 0){
-      allresult$logFC = 0-allresult$logFC
-    }
-    
-    # add the main result to the list
-    list_result <- c(list_result, list("Main result" = allresult))
-    
-    # add to the list of genes for 5%
-    if(any(allresult$FDR <= 0.05)){
-      list_result <- c(list_result, list("DEG, 5%" = allresult[allresult$FDR <= 0.05, ]))
-    }
-    
-    # add to the list of genes for 1%
-    if(any(allresult$FDR <= 0.01)){
-      list_result <- c(list_result, list("DEG, 1%" = allresult[allresult$FDR <= 0.01, ]))
-    }
-    
-    
-    # save the result in files
-    write_xlsx(x = list_result, path = file.path(tmp_DEA, "results_DEA.xlsx"), col_names = T)
-    gc()
-    
-    # save the selected samples
-    write.xlsx2(data.frame("Id_sample" = colnames(table_TARGET_unstr), "Group" = group), file = file.path(tmp_DEA, "selected_patients.xlsx"),
-                col.names = T, row.names = F)
-    gc()
-    
-    print(paste0(date(), "; end DEA with cutoff of ", cutoff))
-    
-  }
-  
-}
-
-
-##### function to create the barplot
-#  mecom_log2rpkm, numeric vector, contains level of expression of mecom after tpm or rpkm normalization
-#  all_samples_selected_BM, character vector, contains the identifiers of samples to analyze
-#  DEA_dir, character value, contains the output path where to save the result
-# cutoff, numeric value, indicate custom cutoff value (NULL by default) 
-#### 
-create_barplot <- function(mecom_log2rpkm, all_samples_selected_BM, DEA_dir, cutoff = NULL){
-  
-  # chek the cutoff value
-  if(!is.null(cutoff)){
-    if(!is.numeric(cutoff)) stop("cutoff must be numeric!")
-    filename = file.path(DEA_dir, paste0("MECOM_expression_", cutoff,".pdf"))
-  } else {
-    filename = file.path(DEA_dir, "MECOM_expression.pdf")
-  }
-  
-  # print the filename
-  print(paste0("Create the file ", filename))
-  
-  # draw the barplot
-  pdf(file = filename)
-  barplot(sort(mecom_log2rpkm[all_samples_selected_BM], decreasing = T))
-  title(main = "MECOM expression in TARGET", xlab= "sample", ylab = "log2(TPM)")
-  if(!is.null(cutoff)){
-    abline(h=cutoff, col = "red")
-  } else{
-    abline(h=1, col = "orangered")
-    abline(h=2, col = "red")
-    abline(h=3, col = "red3")
-    abline(h=4, col = "red4")
-  }
-  dev.off()
-  
-  
-}
-
-
 ##### function to create scatterplot
 #  data, data.frame object, contains genes expression
 #  x, character value, indicate the name of the column to put values on x-axis
@@ -235,46 +70,16 @@ getScatterplot <- function(data, x, y, log2 = F){
   
 }
 
-##### function to create scatterplot
-#  data, data.frame object, contains genes expression
-#  x, character value, indicate the name of the column to put values on x-axis
-#  y, character value, indicate the name of the column to put values on y-axis
-# log2, boolean value, indicate if the log2 values must be used (FALSE by default)
-#### 
-getScatterplot_raw <- function(data, x, y, log2 = F){
-  
-  if(log2){
-    scatterplot =  ggplot(data = data, aes(x = log2(data[, x]), y = log2(data[, y]), color = Color)) + 
-      geom_point() +
-      ylab(paste0(y, " (log2)")) + 
-      xlab(paste0(x, " (log2)")) +
-      theme_bw() + 
-      ggtitle(paste0("scatterplot, ", x, " vs ", y, ", TARGET database")) 
-  } else {
-    scatterplot =  ggplot(data = data, aes(x = data[, x], y = data[, y], color = Color)) + 
-      geom_point() +
-      ylab(paste0(y, "")) + 
-      xlab(paste0(x, "")) + 
-      theme_bw() + 
-      ggtitle(paste0("scatterplot, ", x, " vs ", y, ", TARGET database")) 
-  }
-  
-  
-  # return the scatterplot
-  return(scatterplot)
-  
-}
-
 
 
 ## read the tables ---------------------------------------------------------
 
 # read the TCGA file
-TCGA_table <- read.xlsx2(file = "../../../../AML_database/Tables_patients/combined_study_clinical_data_TCGA-AML.xlsx",
+TCGA_table <- read.xlsx2(file = "Dataset/TARGET/combined_study_clinical_data_TCGA-AML.xlsx",
                          sheetIndex = 1)
 
 
-# load the table from the TPO-GFPp vs PBS-GFPn
+# load the table from the TPO-Evi1 RNAseq
 fits_tmp <- readRDS(file = "DEA/Rds/RDS_woD/edge_samplesR_fits_results_DEA.rds")
 
 # select the orthologous genes
@@ -351,6 +156,9 @@ query_Target <- GDCquery(project = "TARGET-AML",
 
 GDCdownload(query_Target)
 data_Target <- GDCprepare(query_Target)
+
+# save the data_Target
+saveRDS(data_Target, "DEA/Human_patients/TARGET/data_Target.rds")
 
 query_clinical_TARGET <- GDCquery(project = "TARGET-AML",
                                   data.category = "Clinical", 
@@ -1080,13 +888,5 @@ scatterplot <- scatterplot + geom_abline(intercept = fit$coefficients[1], slope 
 # create the scatterplot for the Erg vs MECOM expression for all patients
 saveFigures("scatterplot_INPP4BvsMECOM", scatterplot, 
             dirPlot = "DEA/Human_patients/TARGET/allAML/", A4 = T)
-
-
-
-# save the data in the rds file -------------------------------------------
-
-# save the rds file
-saveRDS(data_Target, file = "External_Data/TARGET/data_Target.rds")
-saveRDS(query_clinical_TARGET_2, file = "External_Data/TARGET/query_clinical_TARGET.rds")
 
 
