@@ -109,9 +109,6 @@ fit_bulkTPOVsnoTPO <- merge(x = fit_bulkTPOVsnoTPO,
                                 by.x = "ensembl_gene_id", 
                                 by.y = "mmusculus_homolog_ensembl_gene")
 
-# select the DEG based on FDR <= 5%
-DEG_mouse_bulk <- fit_bulkTPOVsnoTPO[fit_bulkTPOVsnoTPO$FDR <= 0.05, ]
-
 
 # load the table from the bulk TPO vs PBS
 fit_GFP_TPOVsnoTPO <- as_tibble(as.data.frame(topTags(fits_tmp$GFP.TPO, 
@@ -129,16 +126,10 @@ fit_GFP_TPOVsnoTPO <- merge(x = fit_GFP_TPOVsnoTPO,
                             by.x = "ensembl_gene_id", 
                             by.y = "mmusculus_homolog_ensembl_gene")
 
-# select the DEG based on FDR <= 5%
-DEG_mouse_GFP <- fit_GFP_TPOVsnoTPO[fit_GFP_TPOVsnoTPO$FDR <= 0.05, ]
-
 
 
 # create the directories output ------------------------------------------------------
-outdir_db <- "Human_comparison/Plots/TARGET_v2"
-if(!dir.exists(outdir_db)) dir.create(outdir_db, recursive = T)
-
-create_dir(path = "DEA/Human_patients/TARGET/")
+outdir_db <- create_dir(path = "DEA/Human_patients/TARGET/")
 
 # download gene information ------------------------------------------------------
 
@@ -288,8 +279,8 @@ names(list_kmeans) <- paste0("k", 2:9)
 names(list_kmean_plot) <- paste0("k", 2:9)
 
 # save in rds file
-saveRDS(list_kmeans, file = "DEA/Human_patients/TARGET/allAML/TARGET_ERG_selection_kmeans/list_kmeans_TARGET.rds")
-saveRDS(list_kmean_plot, file = "DEA/Human_patients/TARGET/allAML/TARGET_ERG_selection_kmeans/list_kmeans_plot_TARGET.rds")
+saveRDS(list_kmeans, file = "DEA/Human_patients/TARGET/allAML/list_kmeans_TARGET.rds")
+saveRDS(list_kmean_plot, file = "DEA/Human_patients/TARGET/allAML/list_kmeans_plot_TARGET.rds")
 
 # display the result
 g <- grid.arrange(grobs = list_kmean_plot, ncol = 4, nrow = 2)
