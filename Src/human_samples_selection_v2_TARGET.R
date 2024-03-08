@@ -316,11 +316,11 @@ dt_TARGET_ERG_MECOM_log2tpm$cluster = list_kmeans$k4$cluster
 # filter the patient based on the ERG expression
 patient_kept <- dt_TARGET_ERG_MECOM_log2tpm$Sample[dt_TARGET_ERG_MECOM_log2tpm$ERG > 0]
 
-# select patient high (cluster 4)
+# select patient high (cluster 4 in figure paper)
 patient_high <- intersect(dt_TARGET_ERG_MECOM_log2tpm$Sample[dt_TARGET_ERG_MECOM_log2tpm$cluster == "4"], 
                           patient_kept)
 
-# select patient low (cluster 1)
+# select patient low (cluster 1 in figure paper)
 patient_low <- intersect(dt_TARGET_ERG_MECOM_log2tpm$Sample[dt_TARGET_ERG_MECOM_log2tpm$cluster == "1"], 
                          patient_kept)
 

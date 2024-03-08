@@ -372,11 +372,11 @@ min_cutoff_ERG <- min(cluster1_info$ERG)
 # filter the patient based on the ERG expression
 patient_kept <- dt_BEAT_ERG_MECOM_log2tpm$Sample[dt_BEAT_ERG_MECOM_log2tpm$ERG >= min_cutoff_ERG]
 
-# select patient high (cluster 4)
+# select patient high (cluster 4 in figure paper)
 patient_high <- intersect(dt_BEAT_ERG_MECOM_log2tpm$Sample[dt_BEAT_ERG_MECOM_log2tpm$cluster == "3"], 
                           patient_kept)
 
-# select patient low (cluster 1)
+# select patient low (cluster 1 in figure paper)
 patient_low <- intersect(dt_BEAT_ERG_MECOM_log2tpm$Sample[dt_BEAT_ERG_MECOM_log2tpm$cluster == "4"], 
                          patient_kept)
 
