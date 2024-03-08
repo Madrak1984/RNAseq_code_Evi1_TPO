@@ -29,6 +29,7 @@ library(factoextra)
 library(rgl)
 library(gridExtra)
 library(limma)
+library(pheatmap)
 
 # Palette with 20 colors (+black and white) that do not conflict so much, adapted from https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
 myPalette2 <-  c('#e6194b', '#4363d8', '#3cb44b', '#984EA3', '#f58231', '#ffe119', '#F781BF', '#808080', '#98BFDB', '#bcf60c', '#008080', '#e6beff', '#E5C494', '#000075', '#CD00CD', '#aaffc3', '#808000', '#9a6324', '#fffac8', '#800000', '#000000', '#ffffff')
@@ -770,6 +771,98 @@ draw_VennDiagram(x = list(rownames(DEG_bulk[DEG_bulk$logFC < 0,]), rownames(DEG_
                  filename = 'DEA/Result/Result_woSamples/allGFP.TPOvsTPOneg/vennDiagram_down.pdf',
                  color = myCol)
 
+
+
+
+
+
+# creation zscore heatmap for paper ---------------------------------------
+
+# load the fits
+fits <- readRDS(file = "DEA/Rds/RDS_woD/edge_samplesR_fits_results_DEA.rds")
+
+# load the dge
+dge <- readRDS(file = "DEA/Rds/RDS_woD/EnsemblGenes.dge_samplesList.filtered.rds")
+
+# get the log cpm of dge
+logcpm <- cpm(dge, log = T)
+
+
+## create the heatmap for GFP+ -----------------------------------------------------
+
+# select the EdgeR result
+GFP_TPO <- as.data.frame(topTags(object = fits$GFP.TPO, n = nrow(fits$GFP.TPO)))
+
+# select the top100 DEG (based on the FDR)
+top100 <- GFP_TPO %>% arrange(FDR) %>% 
+  filter(GENEBIOTYPE == "protein_coding" & !grepl("RIKEN", DESCRIPTION)) %>% 
+  slice_head(n = 100) %>% select(SYMBOL)
+
+# select the samples
+sel_samples <- dge$samples[grep(pattern = "GFP$", dge$samples$SampleGroup),]
+
+# select the genes
+logcpm_sel <- logcpm[rownames(top100), rownames(sel_samples)]
+
+# rename the genes
+rownames(logcpm_sel) = top100$SYMBOL
+
+# create dataframe for the sample
+sample_col <- sel_samples %>% select(SampleGroup)
+
+# draw the zscore heatmap 
+heatmap <- pheatmap(logcpm_sel,
+                    color = colorRampPalette(c("blue2","white","red"))(100),
+                    scale = "row",
+                    clustering_method = "ward.D2", 
+                    annotation_col = sample_col,
+                    fontsize_row = 4)
+
+# save the heatmap in the files
+saveFigures(fileName = "heatmap_paper_GFP+_TPOvsPBS", ggplot = heatmap, dirPlot = "DEA/Result/Result_woSamples/GFP.TPO/", A4 = T)
+
+# keep Genes order for the bulk heatmap
+top100_order = heatmap$tree_row$labels[heatmap$tree_row$order]
+
+
+
+
+## create the heatmap for bulk+ -----------------------------------------------------
+
+# select the EdgeR result
+bulk_TPO <- as.data.frame(topTags(object = fits$bulk.TPO, n = nrow(fits$bulk.TPO)))
+
+# select the samples
+sel_samples <- dge$samples[grep(pattern = "bulk$", dge$samples$SampleGroup),]
+
+# select the genes
+genes <- dge$genes
+sel_genes <- genes[genes$SYMBOL %in% top100_order, ]
+sel_genes$ensembl_id <- rownames(sel_genes)
+rownames(sel_genes) = sel_genes$SYMBOL
+sel_genes = sel_genes[top100_order,]
+
+# select the genes
+logcpm_sel <- logcpm[sel_genes$ensembl_id, rownames(sel_samples)]
+
+# rename the genes
+rownames(logcpm_sel) = sel_genes$SYMBOL
+
+# create dataframe for the sample
+sample_col <- sel_samples %>% select(SampleGroup)
+
+# draw the zscore heatmap 
+heatmap <- pheatmap(logcpm_sel[, c("BSSE_QGF_200814", "BSSE_QGF_200813", "BSSE_QGF_200795", "BSSE_QGF_200805", "BSSE_QGF_200812", "BSSE_QGF_200816")],
+                    color = colorRampPalette(c("blue2","white","red"))(100),
+                    scale = "row",
+                    clustering_method = "ward.D2", 
+                    annotation_col = sample_col,
+                    fontsize_row = 4, 
+                    cluster_rows = F, 
+                    cluster_cols = F)
+
+# save the heatmap in the files
+saveFigures(fileName = "heatmap_paper_bulk_TPOvsPBS", ggplot = heatmap, dirPlot = "DEA/Result/Result_woSamples/bulk.TPO/", A4 = T)
 
 
 
