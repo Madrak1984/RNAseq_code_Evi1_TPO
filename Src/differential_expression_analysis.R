@@ -1,5 +1,6 @@
 ###### command line to perform the differential expression analysis for the TPO-Evi1 mRNA
-# done by Jonathan Seguin, DBM, UKBB
+# done by Jonathan Seguin, group of Prof. Schwaller, DBM, UKBB, Basel, Switzerland
+# email: jonathan.seguin@unibas.ch, seguin.jonathan@gmail.com
 # created in Tue Mar 15 10:44:34 2022
 
 
