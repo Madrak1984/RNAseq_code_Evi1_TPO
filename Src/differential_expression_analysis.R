@@ -32,10 +32,7 @@ library(limma)
 # Palette with 20 colors (+black and white) that do not conflict so much, adapted from https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
 myPalette2 <-  c('#e6194b', '#4363d8', '#3cb44b', '#984EA3', '#f58231', '#ffe119', '#F781BF', '#808080', '#98BFDB', '#bcf60c', '#008080', '#e6beff', '#E5C494', '#000075', '#CD00CD', '#aaffc3', '#808000', '#9a6324', '#fffac8', '#800000', '#000000', '#ffffff')
 
-### Which version of R and packages was used
-devtools::session_info()
-capture.output(devtools::session_info(), file=paste0("session_info_analysis_", 
-                              format(Sys.Date(), format = "%d_%m_%Y"), ".txt")) 
+
 
 
 # load the functions ------------------------------------------------------
@@ -771,3 +768,11 @@ draw_VennDiagram(x = list(rownames(DEG_bulk[DEG_bulk$logFC < 0,]), rownames(DEG_
                  category = c("Bulk" , "GFP+" , "GFP-"), 
                  filename = 'DEA/Result/Result_woSamples/allGFP.TPOvsTPOneg/vennDiagram_down.pdf',
                  color = myCol)
+
+
+
+
+### Which version of R and packages was used
+devtools::session_info()
+capture.output(devtools::session_info(), file=paste0("session_info_analysis_", 
+                                                     format(Sys.Date(), format = "%d_%m_%Y"), ".txt")) 
