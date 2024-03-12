@@ -1,2 +1,2 @@
 # Introduction
-R code to analyze the RNAseq's dataset from Hugue-Etienne Chatel-Soulet.
+R code to analyze the RNAseq's dataset from Hugues-Etienne Chatel-Soulet.
