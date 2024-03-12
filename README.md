@@ -1,2 +1,2 @@
-# code_MECOM_TPO_paper
-R code to share for the Hugues-Etienne's paper
+# Introduction
+R code to analyze the RNAseq's dataset from Hugue-Etienne Chatel-Soulet.
