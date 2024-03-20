@@ -158,23 +158,6 @@ query_clinical_TARGET_2 <- GDCquery_clinic(project = "TARGET-AML")
 
 # save the query_clinical_TARGET
 saveRDS(query_clinical_TARGET_2, file = "DEA/Human_patients/TARGET/query_clinical_TARGET_2.rds")
-                                  
-
-
-# find outlier samples
-dataPrep_Target <- TCGAanalyze_Preprocessing(object = data_Target, 
-                                             cor.cut = 0.6,
-                                             datatype = "unstranded")                      
-
-# perform normalization
-dataNorm_Target <- TCGAanalyze_Normalization(tabDF = dataPrep_Target,
-                                             geneInfo = geneInfoHT,
-                                             method = "gcContent") 
-
-# filter the samples
-dataFilt_Target <- TCGAanalyze_Filtering(tabDF = dataNorm_Target,
-                                         method = "quantile", 
-                                         qnt.cut =  0.25) 
 
 # get the tpm value for all gene expression
 table_Target_tpm <- assays(data_Target)$tpm_unstrand
