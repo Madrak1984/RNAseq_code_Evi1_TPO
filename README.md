@@ -1,2 +1,6 @@
 # Introduction
-R code to analyze the RNAseq's dataset from Hugues-Etienne Chatel-Soulet.
+This repository contains the R code use to analyze the RNAseq dataset done with Evi1-GFP iKMT2A-MLLT3 mouse model treated or not with TPO. 8 mices were used, 4 treated with TPO and 4 with PBS. Bone marrow cells from sacrificed mice were sorted to generate 3 cells populations: GFP+, GFP- and bulk. Bulk RNAseq was performed on these different samples and differential expression analysis (DEA) was done with EdgeR. 
+
+To compare the differentially expressed genes (DEG) with human samples, human RNAseq was dataset were downloaded from TARGET (https://www.cancer.gov/ccg/research/genome-sequencing/target/studied-cancers/acute-myeloid-leukemia), BEAT (https://registry.opendata.aws/beataml/), St-Jude cloud hospital (https://www.stjude.cloud/) and Leugene (https://leucegene.ca/). Based on the published comparison between ERG vs MECOM gene expression in (Stavropoulou et al, 2016)'s paper (https://doi.org/10.1016/j.ccell.2016.05.011), clustering of patients samples was realized on these different human RNAseq database, in order to perform DEA between the 2 clusters of highest MECOM and ERG expressions. 
+
+# Organisation of the repository
