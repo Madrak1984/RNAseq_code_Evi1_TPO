@@ -81,6 +81,9 @@ mart <- biomaRt::useMart(biomart = "ENSEMBL_MART_ENSEMBL",
 genes_mouse <-  getBM(attributes = c("ensembl_gene_id","entrezgene_id", "external_gene_name"), mart = mart)
 
 
+# get th information for orthologous genes
+ortho <-  getHumanOrthologous()
+
 
 # read the rds files ------------------------------------------------------
 
@@ -601,7 +604,6 @@ saveFigures(fileName = "GSEA_paper_HOXA9", ggplot = ggplot_GSEA,
 ## perform GSEA based on the TPO pathway for GFP+ ------------------------------------------------
 # source (paper: 10.1007/s12079-018-0480-4) 
  
- 
 # set the table for GFP.TPO
 table_GFP_TPO = as.data.frame(topTags(fits$GFP.TPO, n = nrow(fits$GFP.TPO))) 
 
@@ -617,6 +619,7 @@ id_sort = order(table_GFP_TPO$logFC, decreasing = T)
 table_GSEA = table_GFP_TPO[id_sort,]
 geneList_GSEA = table_GSEA$logFC
 names(geneList_GSEA) = table_GSEA$external_gene_name
+
 
 # perform the GSEA analysis
 fgseaRes <- fgsea(pathways = THPO_pathway, stats = geneList_GSEA)
@@ -642,6 +645,15 @@ drawHeatmap(dge = dge, genes = table_GFP_TPO$EnsemblID[table_GFP_TPO$external_ge
 
 
 
+# do the plot enrichment for the biocarta tpo pathway
+biocarta_tpo_pathway_Mm <- genes_mouse %>% dplyr::filter(entrezgene_id %in% Mm.c2$BIOCARTA_TPO_PATHWAY) %>% dplyr::select(ensembl_gene_id) 
+# mouse_genes
+biocarta_tpo_pathway_Mm = biocarta_tpo_pathway_Mm$ensembl_gene_id
+saveFigures(fileName = "GSEA_biocarta_tpo_pathway_GFP_TPOvsnoTPO", ggplot = plotEnrichment(biocarta_tpo_pathway_Mm, geneList_GSEA) + 
+              labs(title = "biocarta_tpo_pathway"), dirPlot = "DEA/Result/Result_woSamples/GFP.TPO/", A4 = T)
+
+
+
 
 
 ## perform GSEA based on the TPO pathway for bulk ------------------------------------------------
@@ -663,6 +675,7 @@ table_GSEA = table_bulk_TPO[id_sort,]
 geneList_GSEA = table_GSEA$logFC
 names(geneList_GSEA) = table_GSEA$external_gene_name
 
+
 # perform the GSEA analysis
 fgseaRes <- fgsea(pathways = THPO_pathway, stats = geneList_GSEA)
 
@@ -675,6 +688,12 @@ saveFigures(fileName = "fgseaResult_TPO_pathways_bulk_TPOvsnoTPO",
             ggplot = plotEnrichment(THPO_pathway$TPO_pathway, geneList_GSEA) + 
               labs(title = "TPO pathway, bulk TPO vs PBS"), 
             dirPlot = "DEA/Result/Result_woSamples/bulk.TPO/", A4 = T)
+
+# do the plot enrichment for the biocarta tpo pathway
+saveFigures(fileName = "GSEA_biocarta_tpo_pathway_bulk_TPOvsnoTPO", ggplot = plotEnrichment(biocarta_tpo_pathway_Mm, geneList_GSEA) + 
+              labs(title = "biocarta_tpo_pathway"), dirPlot = "DEA/Result/Result_woSamples/bulk.TPO/", A4 = T)
+
+
 
 
 
