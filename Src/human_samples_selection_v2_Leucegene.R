@@ -798,11 +798,12 @@ coeff_corr <- round(cor(log2(dt_LEUCEGENE_ERG_MECOM_tmp$MECOM), log2(dt_LEUCEGEN
 
 # create the scatterplot
 scatterplot <- getScatterplot(data = dt_LEUCEGENE_ERG_MECOM_tmp, x = "MECOM", y = "IL12RB2", log2 = T)
-scatterplot <- scatterplot + geom_abline(intercept = fit$coefficients[1], slope = fit$coefficients[2]) +
+scatterplot <- scatterplot +  geom_smooth(method = lm, se = F, fullrange = T) +
   ggtitle(paste0("Comparison between MECOM and IL12RB2; corr coef (Pearson) = ", coeff_corr)) +
   scale_color_manual(values = c("none" = "purple", "MLLr" = "cyan3", 
                                 "MLL-AF9" = "forestgreen", "EVI1r" = "red")) + geom_point(size=3)
-
+scatterplot <- scatterplot + stat_cor(aes(color = Color), label.x.npc = "middle", label.y.npc = "bottom")
+scatterplot
 
 # create the scatterplot for the Erg vs MECOM expression for all patients
 saveFigures("scatterplot_IL12RB2vsMECOM", scatterplot, 
@@ -816,11 +817,12 @@ coeff_corr <- round(cor(log2(dt_LEUCEGENE_ERG_MECOM_tmp$MECOM), log2(dt_LEUCEGEN
 
 # create the scatterplot
 scatterplot <- getScatterplot(data = dt_LEUCEGENE_ERG_MECOM_tmp, x = "MECOM", y = "INPP4B", log2 = T)
-scatterplot <- scatterplot + geom_abline(intercept = fit$coefficients[1], slope = fit$coefficients[2]) +
+scatterplot <- scatterplot +  geom_smooth(method = lm, se = F, fullrange = T) +
   ggtitle(paste0("Comparison between MECOM and INPP4B; corr coef (Pearson) = ", coeff_corr)) +
   scale_color_manual(values = c("none" = "purple", "MLLr" = "cyan3", 
                                 "MLL-AF9" = "forestgreen", "EVI1r" = "red")) + geom_point(size=3)
-
+scatterplot <- scatterplot + stat_cor(aes(color = Color), label.x.npc = "middle", label.y.npc = "bottom")
+scatterplot
 
 # create the scatterplot for the Erg vs MECOM expression for all patients
 saveFigures("scatterplot_INPP4BvsMECOM", scatterplot, 
