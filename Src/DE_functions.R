@@ -856,7 +856,7 @@ draw_scatterplot_day <- function(genes, table_DEG_d10, table_DEG_d60, filename){
 getHumanOrthologous <- function(){
   
   # load the ensembl gene information
-  ensembl <- useMart("ENSEMBL_MART_ENSEMBL", dataset="hsapiens_gene_ensembl", host = "sep2019.archive.ensembl.org")
+  ensembl <- useMart("ENSEMBL_MART_ENSEMBL", dataset="hsapiens_gene_ensembl", host = "https://may2024.archive.ensembl.org") # replace sept2019.archive.ensembl.org
   orthology <- getBM(attributes=c("ensembl_gene_id",
                                   "external_gene_name",
                                   "mmusculus_homolog_associated_gene_name",
